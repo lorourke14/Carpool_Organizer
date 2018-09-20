@@ -1,0 +1,445 @@
+#Things that need to be addressed:
+#1. Please have people specify AM/PM for travel input. I've converted the time to look uniform to make it easier to sort and group, but if you put in 1:45 when looking at it you might know that it's in the afternoon, but the code does not.
+  
+
+#Attempt to replace the blanks with NA
+install.packages("tidyverse")
+install.packages("shiny")
+install.packages("shinydashboard")
+install.packages("DT")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("data.table")
+install.packages("readxl")
+
+library(tidyverse)
+library(shiny)
+library(shinydashboard)
+library(DT)
+library(dplyr)
+library(tidyr)
+library(data.table)
+library(readxl)
+
+#Import file from local storage. 
+
+#Read Excel File as an CSV file and it will convert all NA to stay
+
+Workbench_Travel = read.csv("/Users/lo062074/Documents/CHW_CA_R/Workbench_Travel.csv", header = TRUE, na.strings=c("","NA"))
+
+
+#Lines 13-60 work on separating departures and arrivals, grouping by date, and time in the correct order.
+
+#Pulls the correct columns
+#Workbench_Travel %>% select(Depart_Dt, Assoc_Name, Arrival_Dt, Arrival_Time)
+
+#Saves all arrival information as a table
+All_Arrivals = Workbench_Travel %>% select(Depart_Dt,Assoc_Name, Arrival_Dt, Arrival_Time)
+
+#Saves all departure information as a table
+All_Departures = Workbench_Travel %>% select(Depart_Dt, Assoc_Name, Departure_Dt, Departure_Time)
+
+#Saves a complete project table with the blank values converted to NA
+Complete_Week = Workbench_Travel %>% select(Depart_Dt, Assoc_Name, Arrival_Dt, Arrival_Time, Departure_Dt, Departure_Time)
+
+#View tables to confirm they've correct
+All_Arrivals
+All_Departures
+Complete_Week
+
+#Convert time - isn't important anymore 
+#Arrival_Time = Workbench_Travel$Arrival_Time
+
+#Save formatted time as a variable - isn't important anymore - not important
+#Formatted_Arival_Time = format(strptime(Arrival_Time, "%I:%M %p"), format="%H:%M")
+
+#Rename as variable - not important
+#Arrival_Time = Formatted_Arival_Time 
+
+#Renames the columns and formatts the times in the correct 24 hour format. Did arrivals, depatures, and complete project tables - THIS IS KEY
+Arrivals_Time_Converted = data.table(Week_of = Workbench_Travel$Depart_Dt,
+                                     Associate_Name = Workbench_Travel$Assoc_Name, 
+                                     Arrival_Date = Workbench_Travel$Arrival_Dt, 
+                                     Arrival_Time = format(strptime(Workbench_Travel$Arrival_Time,"%H:%M"), format="%I:%M %p"),
+                                     Hotel_Name = Workbench_Travel$Hotel)
+
+Departures_Time_Converted = data.table(Week_of = Workbench_Travel$Depart_Dt,
+                                       Associate_Name = Workbench_Travel$Assoc_Name,
+                                       Departure_Date = Workbench_Travel$Departure_Dt,
+                                       Departure_Time = format(strptime(Workbench_Travel$Departure_Time, "%H:%M"), format="%I:%M %p"))
+
+Complete_Week_Time_Converted = data.table(Week_of = Workbench_Travel$Depart_Dt,
+                                          Associate_Name = Workbench_Travel$Assoc_Name,
+                                          Arrival_Date = Workbench_Travel$Arrival_Dt,
+                                          Arrival_Time = format(strptime(Workbench_Travel$Arrival_Time,"%H:%M"), format="%I:%M %p"),
+                                          Departure_Date = Workbench_Travel$Departure_Dt,
+                                          Departure_Time = format(strptime(Workbench_Travel$Departure_Time, "%H:%M"), format="%I:%M %p"))
+#view tables
+Arrivals_Time_Converted
+Departures_Time_Converted
+Complete_Week_Time_Converted
+
+#New table with descending time - blank values should be listed as NA
+All_Arrivals_Final = Arrivals_Time_Converted[order(Arrival_Date, Arrival_Time, decreasing = FALSE),]
+All_Departures_Final = Departures_Time_Converted[order(Departure_Date, Departure_Time, decreasing = FALSE),]
+
+#BINGO!! SAVE THIS
+#arrange(Arrivals_Time_Converted, Arrival_Date, desc(Arrival_Time))
+
+#Named above code as a table that sorts in time in descending order but also keeps all NA values.
+#All_Arrivals_Final = arrange(Arrivals_Time_Converted, Arrival_Date, desc(Arrival_Time))
+#All_Departures_Final = arrange(Departures_Time_Converted, Departure_Date, desc(Departure_Time))
+
+#Run the great thing 
+All_Arrivals_Final
+All_Departures_Final
+
+
+#Lines 65-200 work on separating by each week for arrivals (to SMF) and depatures back 
+
+#Figure out why it's dropping values. There should be a total of 48 values per week. 
+#Also number the weeks. If it shows 35 that's how many arrival dates have been entered - this has been figured out
+
+#Use this after all "weeks" are broken up b/c then it will sort as needed.
+#arrange(All_Arrivals_Final, Arrival_Date, desc(Arrival_Time))
+
+#Use wanted date range for each week. 
+#All_Arrivals_Final %>% filter(Week_of == "YYYY-MM-DD")
+
+#Make weekly groups dependent on the Departure_Dt listed in the first column
+Week1_A = All_Arrivals_Final %>% filter(Week_of == "2018-08-05")
+Week2_A = All_Arrivals_Final %>% filter(Week_of == "2018-08-12")
+Week3_A = All_Arrivals_Final %>% filter(Week_of == "2018-08-19")
+Week4_A = All_Arrivals_Final %>% filter(Week_of == "2018-08-26")
+Week5_A = All_Arrivals_Final %>% filter(Week_of == "2018-09-02")
+Week6_A = All_Arrivals_Final %>% filter(Week_of == "2018-09-09")
+Week7_A = All_Arrivals_Final %>% filter(Week_of == "2018-09-16")
+Week8_A = All_Arrivals_Final %>% filter(Week_of == "2018-09-23")
+Week9_A = All_Arrivals_Final %>% filter(Week_of == "2018-09-30")
+Week10_A = All_Arrivals_Final %>% filter(Week_of == "2018-10-07")
+Week11_A = All_Arrivals_Final %>% filter(Week_of == "2018-10-14")
+
+#test each week
+Week1_A
+Week2_A
+Week3_A
+Week4_A
+Week5_A
+Week6_A
+Week7_A
+Week8_A
+Week9_A
+Week10_A
+Week11_A
+
+#Sort week by arrival date and time
+Week1_Arrival = arrange(Week1_A, Arrival_Date, desc(Arrival_Time))
+Week2_Arrival = arrange(Week2_A, Arrival_Date, desc(Arrival_Time))
+Week3_Arrival = arrange(Week3_A, Arrival_Date, desc(Arrival_Time))
+Week4_Arrival = arrange(Week4_A, Arrival_Date, desc(Arrival_Time))
+Week5_Arrival = arrange(Week5_A, Arrival_Date, desc(Arrival_Time))
+Week6_Arrival = arrange(Week6_A, Arrival_Date, desc(Arrival_Time))
+Week7_Arrival = arrange(Week7_A, Arrival_Date, desc(Arrival_Time))
+Week8_Arrival = arrange(Week8_A, Arrival_Date, desc(Arrival_Time))
+Week9_Arrival = arrange(Week9_A, Arrival_Date, desc(Arrival_Time))
+Week10_Arrival = arrange(Week10_A, Arrival_Date, desc(Arrival_Time))
+Week11_Arrival = arrange(Week11_A, Arrival_Date, desc(Arrival_Time))
+
+#Test week by making sure they are sorted correctly and people that haven't filled in their time are at the bottom
+Week1_Arrival
+Week2_Arrival
+Week3_Arrival
+Week4_Arrival
+Week5_Arrival
+Week6_Arrival
+Week7_Arrival
+Week8_Arrival
+Week9_Arrival
+Week10_Arrival
+Week11_Arrival
+
+#Makes groups dependent on the depature date of the first day of each week
+Week1_D = All_Departures_Final %>% filter(Week_of == "2018-08-05")
+Week2_D = All_Departures_Final %>% filter(Week_of == "2018-08-12")
+Week3_D = All_Departures_Final %>% filter(Week_of == "2018-08-19")
+Week4_D = All_Departures_Final %>% filter(Week_of == "2018-08-26")
+Week5_D = All_Departures_Final %>% filter(Week_of == "2018-09-02")
+Week6_D= All_Departures_Final %>% filter(Week_of == "2018-09-09")
+Week7_D = All_Departures_Final %>% filter(Week_of == "2018-09-16")
+Week8_D = All_Departures_Final %>% filter(Week_of == "2018-09-23")
+Week9_D = All_Departures_Final %>% filter(Week_of == "2018-09-30")
+Week10_D = All_Departures_Final %>% filter(Week_of == "2018-10-07")
+Week11_D = All_Departures_Final %>% filter(Week_of == "2018-10-14")
+
+#Test to make sure it works
+Week1_D 
+Week2_D
+Week3_D
+Week4_D
+Week5_D
+Week6_D
+Week7_D
+Week8_D
+Week9_D
+Week10_D
+Week11_D
+
+Week1_Depature = arrange(Week1_D, Departure_Date, desc(Departure_Time))
+Week2_Depature = arrange(Week2_D, Departure_Date, desc(Departure_Time))
+Week3_Depature = arrange(Week3_D, Departure_Date, desc(Departure_Time))
+Week4_Depature = arrange(Week4_D, Departure_Date, desc(Departure_Time))
+Week5_Depature = arrange(Week5_D, Departure_Date, desc(Departure_Time))
+Week6_Depature = arrange(Week6_D, Departure_Date, desc(Departure_Time))
+Week7_Depature = arrange(Week7_D, Departure_Date, desc(Departure_Time))
+Week8_Depature = arrange(Week8_D, Departure_Date, desc(Departure_Time))
+Week9_Depature = arrange(Week9_D, Departure_Date, desc(Departure_Time))
+Week10_Depature = arrange(Week10_D, Departure_Date, desc(Departure_Time))
+Week11_Depature = arrange(Week11_D, Departure_Date, desc(Departure_Time))
+
+Week1_Depature
+Week2_Depature
+Week3_Depature
+Week4_Depature
+Week5_Depature
+Week6_Depature
+Week7_Depature
+Week8_Depature
+Week9_Depature
+Week10_Depature
+Week11_Depature
+
+
+
+Week1_Final_UI = dashboardPage(
+  dashboardHeader(title = "Workbench Travel Schedule"),
+  dashboardSidebar(sidebarMenu(
+    menuItem("Entire Project", tabName = "Entire_Project", icon = icon("calendar")),
+    menuItem("Week of 8/05", tabName = "Week_1", icon = icon("calendar")),
+    menuItem("Week of 8/12 ", tabName = "Week_2", icon = icon("calendar")),
+    menuItem("Week of 8/19 ", tabName = "Week_3", icon = icon("calendar")),
+    menuItem("Week of 8/26 ", tabName = "Week_4", icon = icon("calendar")),
+    menuItem("Week of 9/02", tabName = "Week_5", icon = icon("calendar")),
+    menuItem("Week of 9/09", tabName = "Week_6", icon = icon("calendar")),
+    menuItem("Week of 9/16", tabName = "Week_7", icon = icon("calendar")),
+    menuItem("Week of 9/23", tabName = "Week_8", icon = icon("calendar")),
+    menuItem("Week of 9/30", tabName = "Week_9", icon = icon("calendar")),
+    menuItem("Week of 10/07", tabName = "Week_10", icon = icon("calendar")),
+    menuItem("Week of 10/14", tabName = "Week_11", icon = icon("calendar")))),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "Entire_Project",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Entire_Project_Table"))
+      ),
+      tabItem(tabName = "Week_1",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week1_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week1_Table"))
+              ),
+      tabItem(tabName = "Week_2",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week2_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week2_Table"))),
+              
+      tabItem(tabName = "Week_3",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week3_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week3_Table"))),
+      tabItem(tabName = "Week_4",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week4_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week4_Table"))),
+                      
+      tabItem(tabName = "Week_5",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week5_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week5_Table"))),
+                              
+      tabItem(tabName = "Week_6",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week6_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week6_Table"))),
+                                      
+      tabItem(tabName = "Week_7",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week7_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week7_Table"))),
+                                              
+      tabItem(tabName = "Week_8",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week8_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week8_Table"))),
+                                                      
+      tabItem(tabName = "Week_9",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week9_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week9_Table"))),
+                                                              
+      tabItem(tabName = "Week_10",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week10_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week10_Table"))),
+            
+      tabItem(tabName = "Week_11",
+              h3("Arrivals"),
+              tabPanel("Arrivals", dataTableOutput("Arrivals_Week11_Table")),
+              h3("Departures"),
+              tabPanel("Depatures", dataTableOutput("Depatures_Week11_Table")))
+      
+    )
+  )
+)
+  
+  fluidPage(
+
+  
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week2_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week2_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week3_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week3_Table")),
+
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week4_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week4_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week5_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week5_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week6_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week6_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week7_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week7_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week8_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week8_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week9_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week9_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week10_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week10_Table")),
+  
+  h3("Arrivals"),
+  tabPanel("Arrivals", dataTableOutput("Arrivals_Week11_Table")),
+  h3("Departures"),
+  tabPanel("Depatures", dataTableOutput("Depatures_Week11_Table"))
+  
+  
+)
+
+Week1_Final_Server= function(input, output){
+  
+  output$Entire_Project_Table = renderDataTable(
+    return(Complete_Week_Time_Converted))
+  
+  output$Arrivals_Week1_Table = renderDataTable(
+    return(Week1_Arrival))
+    #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week1_Table = renderDataTable(
+    return(Week1_Depature))
+  
+  output$Arrivals_Week2_Table = renderDataTable(
+    return(Week2_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week2_Table = renderDataTable(
+    return(Week2_Depature))
+  
+  output$Arrivals_Week3_Table = renderDataTable(
+    return(Week3_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week3_Table = renderDataTable(
+    return(Week3_Depature))
+  
+  output$Arrivals_Week4_Table = renderDataTable(
+    return(Week4_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week4_Table = renderDataTable(
+    return(Week4_Depature))
+  
+  output$Arrivals_Week5_Table = renderDataTable(
+    return(Week5_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week5_Table = renderDataTable(
+    return(Week5_Depature))
+  
+  output$Arrivals_Week6_Table = renderDataTable(
+    return(Week6_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week6_Table = renderDataTable(
+    return(Week6_Depature))
+  
+  output$Arrivals_Week7_Table = renderDataTable(
+    return(Week7_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week7_Table = renderDataTable(
+    return(Week7_Depature))
+  
+  output$Arrivals_Week8_Table = renderDataTable(
+    return(Week8_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week8_Table = renderDataTable(
+    return(Week8_Depature))
+  
+  output$Arrivals_Week9_Table = renderDataTable(
+    return(Week9_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week9_Table = renderDataTable(
+    return(Week9_Depature))
+  
+  output$Arrivals_Week10_Table = renderDataTable(
+    return(Week10_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week10_Table = renderDataTable(
+    return(Week10_Depature))
+  
+  output$Arrivals_Week11_Table = renderDataTable(
+    return(Week11_Arrival))
+  #datatable(Week1_Arrival, options = list(pagelength = 48)))
+  
+  output$Depatures_Week11_Table = renderDataTable(
+    return(Week11_Depature))
+}
+
+shinyApp(Week1_Final_UI, Week1_Final_Server)
+
+
