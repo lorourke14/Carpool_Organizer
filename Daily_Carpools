@@ -1,0 +1,52 @@
+#Read the weekly schedule
+#Code is written for one week only (week 6). 
+#Still working on recognizing the dates on each column and dropping the date and keeping the date name so it can be used for any week.
+
+install.packages("tidyverse")
+install.packages("shiny")
+install.packages("shinydashboard")
+install.packages("DT")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("data.table")
+install.packages("readxl")
+
+library(tidyverse)
+library(shiny)
+library(shinydashboard)
+library(DT)
+library(dplyr)
+library(tidyr)
+library(data.table)
+library(readxl)
+
+CHW_Schedule_Import = read.csv("/Users/lo062074/Documents/CHW_CA_R/CHW_Schedule.csv", header = TRUE, na.strings=c("","NA"))
+
+CHW_Schedule_Import
+
+
+#Drops unneeded columns and does not need to resaves as a variable. 
+CHW_Schedule_Import[,c(8:12)] = NULL
+CHW_Schedule_Import
+
+CHW_Schedule = arrange(CHW_Schedule_Import, Monday.9.10, Tuesday.9.11, Wednesday.9.12, Thursday.9.13, Friday.9.14, Saturday.9.15, desc(Monday.9.10, Tuesday.9.11, Wednesday.9.12, Thursday.9.13, Friday.9.14, Saturday.9.15))
+#CHW_Schedule_Test = arrange_all(CHW_Schedule_Import, desc(Monday, Tuesday, Wendesday, Thursday, Friday, Saturday))
+
+
+CHW_Schedule_UI = fluidPage(
+  titlePanel("Week 6 Schedule"),
+  fluidRow(dataTableOutput("Week6_Schedule_Table")
+  )
+)
+
+CHW_Schedule_Server= function(input, output){
+  output$Week6_Schedule_Table = renderDataTable(
+    return(CHW_Schedule))
+}
+
+
+shinyApp(CHW_Schedule_UI, CHW_Schedule_Server)
+
+
+
+
